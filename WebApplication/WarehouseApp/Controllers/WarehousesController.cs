@@ -33,18 +33,20 @@ namespace WebApplication.Controllers
                 var newId = _warehouseRepository.InsertProduct_WarehouseRecord(dataToAccept, orderId);
 
                 return Ok(newId.Result);
-
-
-
+                
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
                 return BadRequest(e.Message);
             }
+        }
+
+        [HttpPost("procedure")]
+        public async Task<IActionResult> AddProcedure(DataToAccept dataToAccept)
+        {
+            return Ok(await _warehouseRepository.AddWithProcedures(dataToAccept));
             
-                
-          
         }
     }
 }

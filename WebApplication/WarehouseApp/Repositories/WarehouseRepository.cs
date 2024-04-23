@@ -183,10 +183,9 @@ public class WarehouseRepository : IWarehouseRepository
         var price = reader.GetDecimal(priceOrdinal);
 
         return price;
-
     }
-    
-    public async Task<int> InsertProduct_WarehouseRecord(DataToAccept dataToAccept, int idOrder )
+
+    public async Task<int> InsertProduct_WarehouseRecord(DataToAccept dataToAccept, int idOrder)
     {
         var firstQuery = "INSERT INTO Product_Warehouse(IdWarehouse, IdProduct, IdOrder, Amount, Price, CreatedAt)" +
                          "VALUES (@IdWarehouse, @IdProduct, @IdOrder, @Amount, @Price, @CreatedAt )";
@@ -196,7 +195,7 @@ public class WarehouseRepository : IWarehouseRepository
 
         command.Connection = connection;
         command.CommandText = firstQuery;
-        decimal totalPrice = dataToAccept.Amount * ReturnProductPrice(dataToAccept.IdProduct).Result; 
+        decimal totalPrice = dataToAccept.Amount * ReturnProductPrice(dataToAccept.IdProduct).Result;
         command.Parameters.AddWithValue("@IdWarehouse", dataToAccept.IdWarehouse);
         command.Parameters.AddWithValue("@IdProduct", dataToAccept.IdProduct);
         command.Parameters.AddWithValue("@IdOrder", idOrder);
@@ -209,8 +208,8 @@ public class WarehouseRepository : IWarehouseRepository
             throw new Exception("Could not insert to the table");
         connection.Close();
         command.Cancel();
-        
-        
+
+
         await using var connection2 = new SqlConnection(_configuration.GetConnectionString("Docker"));
         await using var command2 = new SqlCommand();
 
@@ -222,7 +221,7 @@ public class WarehouseRepository : IWarehouseRepository
         command2.Parameters.AddWithValue("@IdOrder", idOrder);
 
         await connection2.OpenAsync();
-        
+
         var reader2 = await command2.ExecuteReaderAsync();
         if (!reader2.HasRows)
             throw new Exception("Could not retrieve new Id");
@@ -232,7 +231,26 @@ public class WarehouseRepository : IWarehouseRepository
         var newId = reader2.GetInt32(idOrdinal);
 
         return newId;
+    }
+
+    public async Task<int> AddWithProcedures(DataToAccept dataToAccept)
+    {
+        var query = "EXEC AddProductToWarehouse @IdProduct, @IdWarehouse, @Amount, @CreatedAt ";
+
+        await using var connection = new SqlConnection(_configuration.GetConnectionString("Docker"));
+        await using var command = new SqlCommand();
+
+        command.CommandText = query;
+        command.Connection = connection;
+        command.Parameters.AddWithValue("@IdProduct", dataToAccept.IdProduct);
+        command.Parameters.AddWithValue("@IdWarehouse", dataToAccept.IdWarehouse);
+        command.Parameters.AddWithValue("@Amount", dataToAccept.Amount);
+        command.Parameters.AddWithValue("@CreatedAt", dataToAccept.Date);
 
 
+        await connection.OpenAsync();
+        var newId = await command.ExecuteScalarAsync();
+
+        return Convert.ToInt32(newId);
     }
 }

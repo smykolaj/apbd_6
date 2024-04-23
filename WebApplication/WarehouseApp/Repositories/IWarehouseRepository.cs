@@ -21,4 +21,6 @@ public interface IWarehouseRepository
     Task<decimal> ReturnProductPrice(int productId);
     
     Task<int> InsertProduct_WarehouseRecord(DataToAccept dataToAccept, int idOrder );
+
+    Task<int> AddWithProcedures(DataToAccept dataToAccept);
 }
